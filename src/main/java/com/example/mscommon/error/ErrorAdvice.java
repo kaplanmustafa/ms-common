@@ -1,7 +1,7 @@
 package com.example.mscommon.error;
 
-import java.util.List;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.ObjectError;
@@ -10,8 +10,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.List;
+
 @RestControllerAdvice
 public class ErrorAdvice {
+
+    private static final Logger logger = LoggerFactory.getLogger(ErrorAdvice.class);
 
     @Autowired
     private ErrorConfig errconfig;
@@ -19,22 +23,17 @@ public class ErrorAdvice {
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorObj handleException(final IllegalArgumentException exp) {
-        return this.errconfig.buildBaseErrorObj()
-                             .setMessage(exp.getMessage())
-                             .setErrorCode(10203);
+        return this.errconfig.buildBaseErrorObj().setMessage(exp.getMessage()).setErrorCode(10203);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorObj handleException(final MethodArgumentNotValidException exp) {
         List<ObjectError> allErrorsLoc = exp.getAllErrors();
-        ErrorObj rootError = this.errconfig.buildBaseErrorObj()
-                                           .setMessage("Validation error")
-                                           .setErrorCode(12300);
+        ErrorObj rootError = this.errconfig.buildBaseErrorObj().setMessage("Validation error").setErrorCode(12300);
+
         for (ObjectError objectErrorLoc : allErrorsLoc) {
-            rootError.addSubError(this.errconfig.buildBaseErrorObj()
-                                                .setMessage("" + objectErrorLoc)
-                                                .setErrorCode(12301));
+            rootError.addSubError(this.errconfig.buildBaseErrorObj().setMessage("" + objectErrorLoc).setErrorCode(12301));
         }
         return rootError;
     }
@@ -42,9 +41,8 @@ public class ErrorAdvice {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorObj handleException(final Exception exp) {
-        return this.errconfig.buildBaseErrorObj()
-                             .setMessage(exp.getMessage())
-                             .setErrorCode(15000);
+        logger.error("[ErrorAdvice][handleException]-> *Error* : " + exp.getMessage(), exp);
+        return this.errconfig.buildBaseErrorObj().setMessage(exp.getMessage()).setErrorCode(15000);
     }
 
 }
