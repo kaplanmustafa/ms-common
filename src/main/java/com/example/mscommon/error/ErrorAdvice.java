@@ -1,5 +1,6 @@
 package com.example.mscommon.error;
 
+import com.example.mscommon.error.feign.MyFeignClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,12 @@ public class ErrorAdvice {
             rootError.addSubError(this.errconfig.buildBaseErrorObj().setMessage("" + objectErrorLoc).setErrorCode(12301));
         }
         return rootError;
+    }
+
+    @ExceptionHandler(MyFeignClientException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorObj handleException(final MyFeignClientException exp) {
+        return this.errconfig.buildBaseErrorObj().setMessage("Error while calling another MS").setErrorCode(18300).addSubError(exp.getErrorObj());
     }
 
     @ExceptionHandler(Exception.class)
